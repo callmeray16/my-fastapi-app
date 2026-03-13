@@ -8,7 +8,8 @@ app = FastAPI()
 def home_page():
     # 4. Define the 'Response' (The Goods)
 
-    return "there's nothing here"
+    return "GAY GAY GAY GAY ARAVIND"
+
 
 
 
