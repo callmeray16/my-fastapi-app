@@ -1,47 +1,47 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from google import genai
+from fastapi.middleware.cors import CORSMiddleware
+import os
 
-client = genai.Client(api_key="AIzaSyBMZDOkwBS5Z8-R6etXTm81Rgjin7hWUxo")
+# This tells Python: "Go look in the computer's secret settings for the key"
+api_key = os.getenv("GOOGLE_API_KEY")
+client = genai.Client(api_key=api_key)
 
-
-
-class UserProfile(BaseModel):
-    username: str
-    bio: str
-    age: int
-
-#uvicorn main:app --reload
-# 2. Create your 'App' (This is your Kitchen)
+# 1. Initialize the app ONCE
 app = FastAPI()
+
+# 2. Add CORS Middleware (Crucial for your HTML file to work)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# 3. Initialize Gemini Client
+# Pro-tip: Keep this key safe!
 
 @app.get("/")
 def home_page():
-    # 4. Define the 'Response' (The Goods)
-    return "This is very interesting"
+    return {"message": "API is live and interesting!"}
 
 @app.get("/add/{num1}/{num2}")
 def calculate(num1: int, num2: int):
-    result = num1 + num2
-    return {
-        "operation": "addition",
-        "sum": result
-    }
+    return {"operation": "addition", "sum": num1 + num2}
 
-@app.get("/ai/{prompt}")
-def gemini(prompt:str):
+@app.get("/ask")
+def gemini(query: str):
     try:
-        # UPDATED: Using the currently active 2026 model IDs
         response = client.models.generate_content(
-        model="gemini-2.5-flash", 
-        contents= prompt)
-        return response.text.replace('\n',"")
-    
-
+            model="gemini-2.0-flash", 
+            contents=query
+        )
+        # We are wrapping the text in a dictionary with the key "answer"
+        return {"answer": response.text} 
     except Exception as e:
-        print(f"Error: {e}")
+        return {"answer": f"Error: {str(e)}"}
 
-    
 @app.get("/items")
 def get_item(item_id: int, color: str = "white"):
     return {
@@ -50,6 +50,4 @@ def get_item(item_id: int, color: str = "white"):
         "message": f"Fetching item {item_id} in {color}"
     }
 
-@app.post("/create-user")
-def create_user(user: UserProfile):
-    return {"status": "User Created", "data": user}
+#uvicorn main:app --reload
