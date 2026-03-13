@@ -7,4 +7,5 @@ app = FastAPI()
 @app.get("/")
 def home_page():
     # 4. Define the 'Response' (The Goods)
-    return "This is very interesting"
+
+    return "Rohith is gay"
